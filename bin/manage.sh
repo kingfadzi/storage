@@ -3,18 +3,26 @@
 # Define variables
 MINIO_CONTAINER_NAME="minio"
 LOCAL_STORAGE="$HOME/minio-data"  # Maps to /local_storage in the container
+NETWORK_STORAGE="/mnt/f"          # Maps to /network_storage in the container (temporarily disabled)
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
 MINIO_ROOT_USER="admin"
 MINIO_ROOT_PASSWORD="admin1234"
 
-# Function to ensure the local storage directory exists
-check_local_folder() {
+# Function to ensure the storage directories exist
+check_storage_dirs() {
     if [ ! -d "$LOCAL_STORAGE" ]; then
         echo "Creating local MinIO storage directory at $LOCAL_STORAGE..."
         mkdir -p "$LOCAL_STORAGE"
     fi
+
+    if [ ! -d "$NETWORK_STORAGE" ]; then
+        echo "WARNING: Network storage $NETWORK_STORAGE not found! Skipping..."
+    fi
+
+    # Fix permissions to ensure Docker can access them
+    chmod -R 777 "$LOCAL_STORAGE"
 }
 
 # Function to build the Docker image
@@ -33,7 +41,7 @@ remove_existing_container() {
 
 # Function to start the MinIO container
 start_minio() {
-    check_local_folder
+    check_storage_dirs  # Ensure directories exist
     build_image  # Always build before starting
     remove_existing_container  # Ensure no conflicting container
 
@@ -43,6 +51,7 @@ start_minio() {
         -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
         -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
+        -v "$NETWORK_STORAGE:/network_storage" \
         "$DOCKER_IMAGE")
 
     # Wait a few seconds and check if the container is still running
