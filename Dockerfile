@@ -23,4 +23,4 @@ USER minio-user
 
 # Start MinIO with local and optional network storage
 ENTRYPOINT ["/usr/local/bin/minio"]
-CMD ["server", "/local_storage", "/network_storage", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9090"]
+CMD ["server", "/local_storage", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9090"]

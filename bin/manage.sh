@@ -3,7 +3,7 @@
 # Define variables
 MINIO_CONTAINER_NAME="minio"
 LOCAL_STORAGE="$HOME/minio-data"
-NETWORK_STORAGE="/mnt/f"  # Network storage (only if available)
+NETWORK_STORAGE="/mnt/f"  # Only used if it exists
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
@@ -17,12 +17,13 @@ check_storage_dirs() {
         mkdir -p "$LOCAL_STORAGE"
     fi
 
-    # Ensure MinIO has correct ownership
+    # Ensure correct ownership
     chown -R "$(id -u):$(id -g)" "$LOCAL_STORAGE"
 
-    # Check for network storage availability
+    # If network storage is missing, remove the variable
     if [ ! -d "$NETWORK_STORAGE" ]; then
-        echo "WARNING: Network storage ($NETWORK_STORAGE) not found! Proceeding without it..."
+        echo "INFO: Network storage ($NETWORK_STORAGE) not found. Running with local storage only."
+        unset NETWORK_STORAGE  # Prevents accidental usage
     fi
 }
 
@@ -48,8 +49,8 @@ start_minio() {
 
     echo "Starting MinIO container..."
 
-    if [ -d "$NETWORK_STORAGE" ]; then
-        echo "Network storage detected. Using both local and network storage."
+    if [ -n "$NETWORK_STORAGE" ]; then
+        echo "INFO: Network storage detected. Using both local and network storage."
         CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
             -p 9000:9000 -p 9090:9090 \
             -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
@@ -59,7 +60,7 @@ start_minio() {
             --user "$(id -u):$(id -g)" \
             "$DOCKER_IMAGE")
     else
-        echo "Network storage not found. Running MinIO with local storage only."
+        echo "INFO: Running MinIO with local storage only."
         CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
             -p 9000:9000 -p 9090:9090 \
             -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
