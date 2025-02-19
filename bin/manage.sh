@@ -3,12 +3,11 @@
 # Define variables
 MINIO_CONTAINER_NAME="minio"
 LOCAL_STORAGE="$HOME/minio-data"  # Maps to /local_storage in the container
-NETWORK_STORAGE="/mnt/f"          # Maps to /network_storage in the container (temporarily disabled)
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
 MINIO_ROOT_USER="admin"
-MINIO_ROOT_PASSWORD="admin1234"  # At least 8 characters to meet MinIO requirements
+MINIO_ROOT_PASSWORD="admin1234"
 
 # Function to ensure the local storage directory exists
 check_local_folder() {
@@ -41,8 +40,8 @@ start_minio() {
     echo "Starting MinIO container..."
     CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
         -p 9000:9000 -p 9090:9090 \
-        -e MINIO_ROOT_USER="$MINIO_ROOT_USER" \
-        -e MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD" \
+        -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
+        -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
         "$DOCKER_IMAGE")
 
@@ -55,8 +54,8 @@ start_minio() {
     fi
 
     echo "MinIO started successfully!"
-    echo "Access MinIO Console: http://localhost:9090"
-    echo "Access MinIO API: http://localhost:9000"
+    echo "Access MinIO Console: http://$(hostname -I | awk '{print $1}'):9090"
+    echo "Access MinIO API: http://$(hostname -I | awk '{print $1}'):9000"
     echo "Login with Username: $MINIO_ROOT_USER and Password: $MINIO_ROOT_PASSWORD"
 }
 

@@ -21,10 +21,6 @@ EXPOSE 9000 9090
 # Switch to MinIO user
 USER minio-user
 
-# Hardcoded MinIO credentials (avoid using ENV for secrets in production)
-ENV MINIO_ROOT_USER="admin"
-ENV MINIO_ROOT_PASSWORD="admin1234"
-
-# Start MinIO with renamed storage directories
+# Start MinIO with external access enabled
 ENTRYPOINT ["/usr/local/bin/minio"]
-CMD ["server", "/local_storage", "/network_storage", "--console-address", ":9090"]
+CMD ["server", "/local_storage", "/network_storage", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9090"]
