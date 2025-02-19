@@ -2,27 +2,22 @@
 
 # Define variables
 MINIO_CONTAINER_NAME="minio"
-LOCAL_STORAGE="$HOME/minio-data"  # Maps to /local_storage in the container
-NETWORK_STORAGE="/mnt/f"          # Maps to /network_storage in the container (optional)
+LOCAL_STORAGE="$HOME/minio-data"  # Only local storage is used now
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
 MINIO_ROOT_USER="admin"
 MINIO_ROOT_PASSWORD="admin1234"
 
-# Function to ensure the storage directories exist
+# Function to ensure the storage directory exists
 check_storage_dirs() {
     if [ ! -d "$LOCAL_STORAGE" ]; then
         echo "Creating local MinIO storage directory at $LOCAL_STORAGE..."
         mkdir -p "$LOCAL_STORAGE"
     fi
 
-    if [ ! -d "$NETWORK_STORAGE" ]; then
-        echo "WARNING: Network storage ($NETWORK_STORAGE) not found! Proceeding without it..."
-    fi
-
-    # Ensure MinIO can access the local storage
-    chmod -R 777 "$LOCAL_STORAGE"
+    # Ensure MinIO has correct permissions
+    sudo chown -R $(whoami):$(whoami) "$LOCAL_STORAGE"
 }
 
 # Function to build the Docker image
@@ -41,29 +36,18 @@ remove_existing_container() {
 
 # Function to start the MinIO container
 start_minio() {
-    check_storage_dirs  # Ensure directories exist
+    check_storage_dirs  # Ensure directory exists
     build_image  # Always build before starting
     remove_existing_container  # Ensure no conflicting container
 
     echo "Starting MinIO container..."
 
-    # Check if network storage exists and mount volumes accordingly
-    if [ -d "$NETWORK_STORAGE" ]; then
-        CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
-            -p 9000:9000 -p 9090:9090 \
-            -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
-            -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
-            -v "$LOCAL_STORAGE:/local_storage" \
-            -v "$NETWORK_STORAGE:/network_storage" \
-            "$DOCKER_IMAGE")
-    else
-        CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
-            -p 9000:9000 -p 9090:9090 \
-            -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
-            -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
-            -v "$LOCAL_STORAGE:/local_storage" \
-            "$DOCKER_IMAGE")
-    fi
+    CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
+        -p 9000:9000 -p 9090:9090 \
+        -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
+        -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
+        -v "$LOCAL_STORAGE:/local_storage" \
+        "$DOCKER_IMAGE")
 
     # Wait a few seconds and check if the container is still running
     sleep 5
