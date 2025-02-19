@@ -34,7 +34,7 @@ build_image() {
 # Function to start the MinIO container
 start_minio() {
     check_local_folder
-    check_network_drive
+    # check_network_drive
     build_image  # Always build before starting
 
     if docker ps --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
