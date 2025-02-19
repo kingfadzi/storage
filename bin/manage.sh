@@ -3,7 +3,7 @@
 # Define variables
 MINIO_CONTAINER_NAME="minio"
 LOCAL_STORAGE="$HOME/minio-data"  # Maps to /local_storage in the container
-NETWORK_STORAGE="/mnt/f"          # Maps to /network_storage in the container (temporarily disabled)
+NETWORK_STORAGE="/mnt/f"          # Maps to /network_storage in the container (optional)
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
@@ -18,10 +18,10 @@ check_storage_dirs() {
     fi
 
     if [ ! -d "$NETWORK_STORAGE" ]; then
-        echo "WARNING: Network storage $NETWORK_STORAGE not found! Skipping..."
+        echo "WARNING: Network storage ($NETWORK_STORAGE) not found! Proceeding without it..."
     fi
 
-    # Fix permissions to ensure Docker can access them
+    # Ensure MinIO can access the local storage
     chmod -R 777 "$LOCAL_STORAGE"
 }
 
@@ -46,13 +46,24 @@ start_minio() {
     remove_existing_container  # Ensure no conflicting container
 
     echo "Starting MinIO container..."
-    CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
-        -p 9000:9000 -p 9090:9090 \
-        -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
-        -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
-        -v "$LOCAL_STORAGE:/local_storage" \
-        -v "$NETWORK_STORAGE:/network_storage" \
-        "$DOCKER_IMAGE")
+
+    # Check if network storage exists and mount volumes accordingly
+    if [ -d "$NETWORK_STORAGE" ]; then
+        CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
+            -p 9000:9000 -p 9090:9090 \
+            -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
+            -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
+            -v "$LOCAL_STORAGE:/local_storage" \
+            -v "$NETWORK_STORAGE:/network_storage" \
+            "$DOCKER_IMAGE")
+    else
+        CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
+            -p 9000:9000 -p 9090:9090 \
+            -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
+            -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
+            -v "$LOCAL_STORAGE:/local_storage" \
+            "$DOCKER_IMAGE")
+    fi
 
     # Wait a few seconds and check if the container is still running
     sleep 5
