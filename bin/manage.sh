@@ -2,7 +2,7 @@
 
 # Define variables
 MINIO_CONTAINER_NAME="minio"
-LOCAL_STORAGE="$HOME/minio-data"  # Only local storage is used now
+LOCAL_STORAGE="$HOME/minio-data"
 DOCKER_IMAGE="minio-almalinux"
 
 # Hardcoded MinIO Credentials
@@ -17,7 +17,7 @@ check_storage_dirs() {
     fi
 
     # Ensure MinIO has correct ownership
-    chown -R $(id -u):$(id -g) "$LOCAL_STORAGE"
+    chown -R "$(id -u):$(id -g)" "$LOCAL_STORAGE"
 }
 
 # Function to build the Docker image
@@ -42,19 +42,20 @@ start_minio() {
 
     echo "Starting MinIO container..."
 
+    # FIXED: Removed invalid backslash and ensured proper image reference
     CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
         -p 9000:9000 -p 9090:9090 \
         -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
         -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
-        --user $(id -u):$(id -g) \  # Run MinIO as the current user
+        --user "$(id -u):$(id -g)" \
         "$DOCKER_IMAGE")
 
     # Wait a few seconds and check if the container is still running
     sleep 5
     if ! docker ps | grep -q "$MINIO_CONTAINER_NAME"; then
         echo "Error: MinIO failed to start! Check logs with:"
-        echo "docker logs $CONTAINER_ID"
+        echo "docker logs $MINIO_CONTAINER_NAME"
         exit 1
     fi
 
