@@ -16,8 +16,8 @@ check_storage_dirs() {
         mkdir -p "$LOCAL_STORAGE"
     fi
 
-    # Ensure MinIO has correct permissions
-    sudo chown -R $(whoami):$(whoami) "$LOCAL_STORAGE"
+    # Ensure MinIO has correct ownership
+    chown -R $(id -u):$(id -g) "$LOCAL_STORAGE"
 }
 
 # Function to build the Docker image
@@ -47,6 +47,7 @@ start_minio() {
         -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
         -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
+        --user $(id -u):$(id -g) \  # Run MinIO as the current user
         "$DOCKER_IMAGE")
 
     # Wait a few seconds and check if the container is still running

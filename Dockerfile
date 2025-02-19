@@ -6,8 +6,8 @@ RUN yum update -y && yum clean all
 
 # Create MinIO user and necessary directories
 RUN useradd -r minio-user \
-    && mkdir -p /local_storage /network_storage \
-    && chown -R minio-user:minio-user /local_storage /network_storage
+    && mkdir -p /local_storage \
+    && chown -R minio-user:minio-user /local_storage
 
 # Copy the MinIO binary from the local filesystem (Ensure it's in the build context)
 COPY minio /usr/local/bin/minio
@@ -21,6 +21,6 @@ EXPOSE 9000 9090
 # Switch to MinIO user
 USER minio-user
 
-# Start MinIO with external access enabled
+# Start MinIO with local storage only
 ENTRYPOINT ["/usr/local/bin/minio"]
-CMD ["server", "/local_storage", "/network_storage", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9090"]
+CMD ["server", "/local_storage", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9090"]
