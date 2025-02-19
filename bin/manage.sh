@@ -24,15 +24,19 @@ build_image() {
     docker build -t "$DOCKER_IMAGE" .
 }
 
+# Function to remove an existing MinIO container if it exists
+remove_existing_container() {
+    if docker ps -a --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
+        echo "Removing existing MinIO container..."
+        docker stop "$MINIO_CONTAINER_NAME" && docker rm "$MINIO_CONTAINER_NAME"
+    fi
+}
+
 # Function to start the MinIO container
 start_minio() {
     check_local_folder
     build_image  # Always build before starting
-
-    if docker ps --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
-        echo "MinIO is already running!"
-        return
-    fi
+    remove_existing_container  # Ensure no conflicting container
 
     echo "Starting MinIO container..."
     CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
