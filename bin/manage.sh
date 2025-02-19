@@ -25,19 +25,17 @@ check_local_folder() {
     fi
 }
 
-# Function to build the Docker image if not exists
+# Function to build the Docker image
 build_image() {
-    if ! docker images | grep -q "$DOCKER_IMAGE"; then
-        echo "Building MinIO Docker image..."
-        docker build -t "$DOCKER_IMAGE" .
-    fi
+    echo "Building MinIO Docker image..."
+    docker build -t "$DOCKER_IMAGE" .
 }
 
 # Function to start the MinIO container
 start_minio() {
     check_local_folder
     check_network_drive
-    build_image
+    build_image  # Always build before starting
 
     if docker ps --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
         echo "MinIO is already running!"
@@ -70,7 +68,7 @@ stop_minio() {
 # Function to restart the MinIO container
 restart_minio() {
     stop_minio
-    start_minio
+    start_minio  # Includes build step
 }
 
 # Function to check MinIO status
