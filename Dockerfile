@@ -23,6 +23,9 @@ RUN chmod +x /usr/local/bin/minio
 # Copy your custom NGINX config
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Create supervisor log directory & set permissions
+RUN mkdir -p /var/log/supervisor && chmod 777 /var/log/supervisor
+
 # Copy Supervisor config
 COPY supervisord.conf /etc/supervisord.conf
 
