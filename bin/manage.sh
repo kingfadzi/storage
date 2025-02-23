@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define variables
-MINIO_CONTAINER_NAME="minio"
+CONTAINER_NAME="minio-nginx"  # Container name to reflect both MinIO & NGINX
 LOCAL_STORAGE="$HOME/minio-data"  # Single storage mount
-DOCKER_IMAGE="minio-almalinux"
+DOCKER_IMAGE="minio-nginx-almalinux"  # Docker image name
 
 # Hardcoded MinIO Credentials
 MINIO_ROOT_USER="admin"
@@ -22,28 +22,28 @@ check_storage_dirs() {
 
 # Function to build the Docker image
 build_image() {
-    echo "Building MinIO Docker image..."
+    echo "Building MinIO + NGINX Docker image..."
     docker build -t "$DOCKER_IMAGE" .
 }
 
-# Function to remove an existing MinIO container if it exists
+# Function to remove an existing container if it exists
 remove_existing_container() {
-    if docker ps -a --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
-        echo "Removing existing MinIO container..."
-        docker stop "$MINIO_CONTAINER_NAME" && docker rm "$MINIO_CONTAINER_NAME"
+    if docker ps -a --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
+        echo "Removing existing container..."
+        docker stop "$CONTAINER_NAME" && docker rm "$CONTAINER_NAME"
     fi
 }
 
-# Function to start the MinIO container
-start_minio() {
+# Function to start the container
+start_container() {
     check_storage_dirs  # Ensure directories exist
-    build_image  # Always build before starting
+    build_image         # Always build before starting
     remove_existing_container  # Ensure no conflicting container
 
-    echo "Starting MinIO container..."
+    echo "Starting MinIO + NGINX container..."
 
-    CONTAINER_ID=$(docker run -d --name "$MINIO_CONTAINER_NAME" \
-        -p 9000:9000 -p 9090:9090 \
+    CONTAINER_ID=$(docker run -d --name "$CONTAINER_NAME" \
+        -p 8000:8000 -p 9000:9000 -p 9090:9090 \
         -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
         -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
@@ -52,57 +52,66 @@ start_minio() {
 
     # Wait a few seconds and check if the container is still running
     sleep 5
-    if ! docker ps | grep -q "$MINIO_CONTAINER_NAME"; then
-        echo "Error: MinIO failed to start! Check logs with:"
-        echo "docker logs $MINIO_CONTAINER_NAME"
+    if ! docker ps | grep -q "$CONTAINER_NAME"; then
+        echo "Error: MinIO + NGINX failed to start! Check logs with:"
+        echo "docker logs $CONTAINER_NAME"
         exit 1
     fi
 
-    echo "MinIO started successfully!"
-    echo "Access MinIO Console: http://$(hostname -I | awk '{print $1}'):9090"
-    echo "Access MinIO API: http://$(hostname -I | awk '{print $1}'):9000"
-    echo "Login with Username: $MINIO_ROOT_USER and Password: $MINIO_ROOT_PASSWORD"
+    # Print access information
+    echo "MinIO + NGINX started successfully!"
+    echo "Access NGINX Proxy:  http://$(hostname -I | awk '{print $1}'):8000/"
+    echo "Access MinIO API:    http://$(hostname -I | awk '{print $1}'):8000/minio/"
+    echo "Access MinIO Console:http://$(hostname -I | awk '{print $1}'):8000/minio-console/"
+    echo "   (Proxied through NGINX on port 8000)"
+    echo
+    echo "Direct MinIO ports (without NGINX proxy):"
+    echo " - MinIO API:       http://$(hostname -I | awk '{print $1}'):9000"
+    echo " - MinIO Console:   http://$(hostname -I | awk '{print $1}'):9090"
+    echo
+    echo "MinIO Login Username: $MINIO_ROOT_USER"
+    echo "MinIO Login Password: $MINIO_ROOT_PASSWORD"
 }
 
-# Function to stop the MinIO container
-stop_minio() {
-    if docker ps --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
-        echo "Stopping MinIO container..."
-        docker stop "$MINIO_CONTAINER_NAME" && docker rm "$MINIO_CONTAINER_NAME"
-        echo "MinIO container stopped."
+# Function to stop the container
+stop_container() {
+    if docker ps --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
+        echo "Stopping MinIO + NGINX container..."
+        docker stop "$CONTAINER_NAME" && docker rm "$CONTAINER_NAME"
+        echo "Container stopped."
     else
-        echo "MinIO is not running."
+        echo "Container is not running."
     fi
 }
 
-# Function to restart the MinIO container
-restart_minio() {
-    stop_minio
-    start_minio  # Includes build step
+# Function to restart the container
+restart_container() {
+    stop_container
+    start_container  # Includes build step
 }
 
-# Function to check MinIO status
-status_minio() {
-    if docker ps --format '{{.Names}}' | grep -q "^$MINIO_CONTAINER_NAME$"; then
-        echo "MinIO is running!"
+# Function to check container status
+status_container() {
+    if docker ps --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
+        echo "MinIO + NGINX is running!"
     else
-        echo "MinIO is NOT running."
+        echo "MinIO + NGINX is NOT running."
     fi
 }
 
 # Parse command-line arguments
 case "$1" in
     start)
-        start_minio
+        start_container
         ;;
     stop)
-        stop_minio
+        stop_container
         ;;
     restart)
-        restart_minio
+        restart_container
         ;;
     status)
-        status_minio
+        status_container
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|status}"
