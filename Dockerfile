@@ -11,6 +11,9 @@ nginx \
 # Install Supervisor using pip
 RUN pip3 install supervisor
 
+# Create Supervisor log directory and set permissions
+RUN mkdir -p /var/log/supervisor && chmod -R 777 /var/log/supervisor
+
 # Create MinIO user and necessary directories
 RUN useradd -r minio-user \
 && mkdir -p /local_storage \
@@ -22,9 +25,6 @@ RUN chmod +x /usr/local/bin/minio
 
 # Copy your custom NGINX config
 COPY nginx.conf /etc/nginx/nginx.conf
-
-# Create supervisor log directory & set permissions
-RUN mkdir -p /var/log/supervisor && chmod 777 /var/log/supervisor
 
 # Copy Supervisor config
 COPY supervisord.conf /etc/supervisord.conf
