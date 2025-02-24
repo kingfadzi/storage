@@ -14,12 +14,12 @@ RUN pip3 install supervisor
 # Create a directory for Supervisor logs and set permissions
 RUN mkdir -p /var/log/supervisor && chmod -R 777 /var/log/supervisor
 
-# Create a MinIO user and storage directory
+# Create a MinIO user and storage directory (optional, since we'll run MinIO as root)
 RUN useradd -r minio-user \
 && mkdir -p /local_storage \
 && chown -R minio-user:minio-user /local_storage
 
-# Copy the MinIO binary into the image, set it executable, and change ownership
+# Copy the MinIO binary into the image, set it executable, and change ownership (ownership not critical when running as root)
 COPY minio /usr/local/bin/minio
 RUN chmod +x /usr/local/bin/minio && chown minio-user:minio-user /usr/local/bin/minio
 
