@@ -14,14 +14,14 @@ RUN pip3 install supervisor
 # Create a directory for Supervisor logs and set permissions
 RUN mkdir -p /var/log/supervisor && chmod -R 777 /var/log/supervisor
 
-# Create a MinIO user and storage directory (optional, since we'll run MinIO as root)
-RUN useradd -r minio-user \
-&& mkdir -p /local_storage \
-&& chown -R minio-user:minio-user /local_storage
+# (Optional) Create a MinIO user and storage directory.
+# We won't use minio-user now because we want to run everything as root.
+RUN mkdir -p /local_storage
 
-# Copy the MinIO binary into the image, set it executable, and change ownership (ownership not critical when running as root)
+# Copy the MinIO binary into the image, set it executable.
+# (Ensure the MinIO binary in your build context is a Linux binary.)
 COPY minio /usr/local/bin/minio
-RUN chmod +x /usr/local/bin/minio && chown minio-user:minio-user /usr/local/bin/minio
+RUN chmod +x /usr/local/bin/minio
 
 # Copy the custom NGINX configuration
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -34,6 +34,9 @@ COPY supervisord.conf /etc/supervisord.conf
 # - 9000 for MinIO API
 # - 9090 for MinIO Console
 EXPOSE 8000 9000 9090
+
+# Ensure we run as root
+USER root
 
 # Use Supervisor to run both MinIO and NGINX
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]

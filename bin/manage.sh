@@ -16,7 +16,7 @@ check_storage_dirs() {
         mkdir -p "$LOCAL_STORAGE"
     fi
 
-    # Ensure correct ownership
+    # Ensure correct ownership (if needed for your setup)
     chown -R "$(id -u):$(id -g)" "$LOCAL_STORAGE"
 }
 
@@ -47,7 +47,6 @@ start_container() {
         -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
         -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
         -v "$LOCAL_STORAGE:/local_storage" \
-        --user "$(id -u):$(id -g)" \
         "$DOCKER_IMAGE")
 
     # Wait a few seconds and check if the container is still running
