@@ -17,7 +17,7 @@ check_storage_dirs() {
     fi
 
     # Ensure correct ownership (if needed for your setup)
-    chown -R "$(id -u):$(id -g)" "$LOCAL_STORAGE"
+    #chown -R "$(id -u):$(id -g)" "$LOCAL_STORAGE"
 }
 
 # Function to build the Docker image
