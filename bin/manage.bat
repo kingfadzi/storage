@@ -20,7 +20,7 @@ docker build -t "%DOCKER_IMAGE%" .
 goto :eof
 
 :remove_existing_container
-docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+docker ps -a --format "{{.Names}}" | findstr /i "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
     echo Removing existing container...
     docker stop "%CONTAINER_NAME%" >nul 2>&1
@@ -38,7 +38,7 @@ for /f "delims=" %%i in ('docker run -d --name "%CONTAINER_NAME%" -p 8000:8000 -
 
 timeout /t 15 /nobreak >nul
 
-docker ps | findstr "%CONTAINER_NAME%" >nul
+docker ps | findstr /i "%CONTAINER_NAME%" >nul
 if %errorlevel% neq 0 (
     echo Error: storage container failed to start! Check logs with:
     echo docker logs %CONTAINER_NAME%
@@ -49,9 +49,9 @@ echo storage container started successfully!
 goto :eof
 
 :stop_container
-docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+docker ps -a --format "{{.Names}}" | findstr /i "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
-    echo Stopping storage container if running...
+    echo Stopping storage container...
     docker stop "%CONTAINER_NAME%" >nul 2>&1
     docker rm "%CONTAINER_NAME%"
     echo Container stopped and removed.
@@ -66,10 +66,10 @@ call :start_container
 goto :eof
 
 :status_container
-docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+docker ps -a --format "{{.Names}}" | findstr /i "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
     echo storage container exists.
-    docker ps --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+    docker ps --format "{{.Names}}" | findstr /i "%CONTAINER_NAME%" >nul
     if %errorlevel% equ 0 (
         echo storage container is running.
     ) else (
