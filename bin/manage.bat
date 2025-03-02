@@ -23,7 +23,8 @@ goto :eof
 docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
     echo Removing existing container...
-    docker stop "%CONTAINER_NAME%" && docker rm "%CONTAINER_NAME%"
+    docker stop "%CONTAINER_NAME%" >nul 2>&1
+    docker rm "%CONTAINER_NAME%"
 )
 goto :eof
 
@@ -35,7 +36,7 @@ call :remove_existing_container
 echo Starting storage container...
 for /f "delims=" %%i in ('docker run -d --name "%CONTAINER_NAME%" -p 8000:8000 -p 9000:9000 -p 9090:9090 -v "%LOCAL_STORAGE%:/local_storage" "%DOCKER_IMAGE%"') do set "CONTAINER_ID=%%i"
 
-timeout /t 5 /nobreak >nul
+timeout /t 15 /nobreak >nul
 
 docker ps | findstr "%CONTAINER_NAME%" >nul
 if %errorlevel% neq 0 (
@@ -48,13 +49,14 @@ echo storage container started successfully!
 goto :eof
 
 :stop_container
-docker ps --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
-    echo Stopping storage container...
-    docker stop "%CONTAINER_NAME%" && docker rm "%CONTAINER_NAME%"
-    echo Container stopped.
+    echo Stopping storage container if running...
+    docker stop "%CONTAINER_NAME%" >nul 2>&1
+    docker rm "%CONTAINER_NAME%"
+    echo Container stopped and removed.
 ) else (
-    echo Container is not running.
+    echo Container does not exist.
 )
 goto :eof
 
@@ -64,11 +66,17 @@ call :start_container
 goto :eof
 
 :status_container
-docker ps --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+docker ps -a --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
 if %errorlevel% equ 0 (
-    echo storage container is running!
+    echo storage container exists.
+    docker ps --format "{{.Names}}" | findstr /x "%CONTAINER_NAME%" >nul
+    if %errorlevel% equ 0 (
+        echo storage container is running.
+    ) else (
+        echo storage container is not running.
+    )
 ) else (
-    echo storage container is NOT running.
+    echo Container does not exist.
 )
 goto :eof
 
