@@ -1,9 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "CONTAINER_NAME=storage"
-set "LOCAL_STORAGE=%USERPROFILE%\storage-data"
-set "DOCKER_IMAGE=storage"
+if "%~1"=="" (
+    echo Usage: %0 {start^|stop^|restart^|status}
+    exit /b 1
+)
+goto main
 
 :check_storage_dirs
 if not exist "%LOCAL_STORAGE%" (
@@ -70,10 +72,10 @@ if %errorlevel% equ 0 (
 )
 goto :eof
 
-if "%~1"=="" (
-    echo Usage: %0 {start^|stop^|restart^|status}
-    exit /b 1
-)
+:main
+set "CONTAINER_NAME=storage"
+set "LOCAL_STORAGE=%CD%\storage"
+set "DOCKER_IMAGE=storage"
 
 if /I "%1"=="start" (
     call :start_container
