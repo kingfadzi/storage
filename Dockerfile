@@ -3,9 +3,10 @@ FROM almalinux:latest
 
 # Update system and install required packages
 RUN yum update -y && yum install -y \
-python3 \
-python3-pip \
-nginx \
+    python3 \
+    python3-pip \
+    socat \
+    nginx \
 && yum clean all
 
 # Install Supervisor using pip
