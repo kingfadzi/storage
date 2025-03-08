@@ -1,7 +1,5 @@
 FROM almalinux:latest
 
-ARG MINIO_SERVER=localhost
-
 RUN yum update -y && yum install -y \
     python3 \
     python3-pip \
@@ -15,10 +13,9 @@ RUN mkdir -p /var/log/supervisor && chmod -R 777 /var/log/supervisor
 
 RUN mkdir -p /local_storage
 
-ARG FQDN=your-default-fqdn
+COPY minio /usr/local/bin/minio
 
-RUN curl -fL "http://${MINIO_SERVER}:9000/blobs/minio" -o /usr/local/bin/minio && \
-    chmod +x /usr/local/bin/minio \
+RUN chmod +x /usr/local/bin/minio
 
 COPY nginx.conf /etc/nginx/nginx.conf
 
