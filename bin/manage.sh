@@ -51,7 +51,7 @@ start_container() {
   build_image
   remove_existing_container
   echo "Starting storage container..."
-  CONTAINER_ID=$(docker run -d --name "$CONTAINER_NAME" -p 8000:8000 -p 9000:9000 -p 9090:9090 -p 3000:3000 -p 8099:8099 -p 5432:5432 -p 4201:4200 -v storage_volume:/local_storage "$DOCKER_IMAGE")
+  CONTAINER_ID=$(docker run -d --name "$CONTAINER_NAME" -p 8001:8000 -p 9001:9000 -p 9091:9090 -p 3001:3000 -p 8100:8099 -p 5433:5432 -p 4201:4200 -v storage_volume:/local_storage "$DOCKER_IMAGE")
   wait_for_container
 }
 
