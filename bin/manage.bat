@@ -52,7 +52,7 @@ call :build_image
 call :remove_existing_container
 
 echo Starting storage container...
-for /f "delims=" %%i in ('docker run -d --name "%CONTAINER_NAME%" -p 8000:8000 -p 9000:9000 -p 9090:9090 3000:3000 -p 8099:8099 -p 5432:5432 -v storage_volume:/local_storage "%DOCKER_IMAGE%"') do set "CONTAINER_ID=%%i"
+for /f "delims=" %%i in ('docker run -d --name "%CONTAINER_NAME%" -p 8000:8000 -p 9000:9000 -p 9090:9090 3000:3000 -p 8099:8099 -p 5432:5432 -p 4201:4200 -v storage_volume:/local_storage "%DOCKER_IMAGE%"') do set "CONTAINER_ID=%%i"
 
 call :wait_for_container
 goto :eof
