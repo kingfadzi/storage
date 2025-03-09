@@ -32,3 +32,8 @@ CMD ["supervisord", "-c", "/etc/supervisord.conf"]
 #EXPOSE 8080
 #CMD ["python3", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
 
+#docker build -t rhel8-port-test .
+#docker run -d -p 8080:8080 rhel8-port-test
+#Test-NetConnection -ComputerName localhost -Port 8080
+
+
