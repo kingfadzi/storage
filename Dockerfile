@@ -26,3 +26,9 @@ EXPOSE 8000 9000 9090
 USER root
 
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+
+#FROM redhat/ubi8:latest
+#RUN yum update -y && yum install -y python3
+#EXPOSE 8080
+#CMD ["python3", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
+
